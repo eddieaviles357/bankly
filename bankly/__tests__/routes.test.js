@@ -90,6 +90,17 @@ describe("POST /auth/login", function() {
     expect(username).toBe("u1");
     expect(admin).toBe(false);
   });
+
+  // TEST BUT #1
+  test("should not allow a incorrect username/password to log in", async function() {
+    const response = await request(app)
+    .post("/auth/login")
+    .send({
+      username: "wrong_user",
+      password: "wrong_password"
+    });
+    expect(response.statusCode).toBe(401);
+  });
 });
 
 describe("GET /users", function() {
