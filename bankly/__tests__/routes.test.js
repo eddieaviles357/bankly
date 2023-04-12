@@ -36,6 +36,7 @@ beforeEach(async function() {
   }
 });
 
+
 describe("POST /auth/register", function() {
   test("should allow a user to register in", async function() {
     const response = await request(app)
@@ -91,7 +92,7 @@ describe("POST /auth/login", function() {
     expect(admin).toBe(false);
   });
 
-  // TEST BUT #1
+  // TESTS BUG #1
   test("should not allow a incorrect username/password to log in", async function() {
     const response = await request(app)
     .post("/auth/login")
@@ -137,6 +138,23 @@ describe("GET /users/[username]", function() {
       phone: "phone1"
     });
   });
+
+  // TESTS BUG #4
+  test("should throw 404 if user doesn't exist", async function() {
+    const response = await request(app)
+     .get("/users/wrong_user")
+     .send({ _token: tokens.u1 });
+    expect(response.statusCode).toBe(404);
+  });
+  
+  // TESTS BUG #5
+  test("should throw 401 if token is invalid", async function() {
+    const fakeToken = jwt.sign({ username: "u1", admin: false }, "kakesecret");
+    const response = await request(app)
+    .get("/users/u1")
+    .send({ _token: fakeToken });
+   expect(response.statusCode).toBe(401);
+  })
 });
 
 describe("PATCH /users/[username]", function() {
@@ -174,6 +192,13 @@ describe("PATCH /users/[username]", function() {
       .send({ _token: tokens.u1, admin: true });
     expect(response.statusCode).toBe(401);
   });
+    // TEST BUG #2
+  test("should disallow password patching", async function() {
+    const response = await request(app)
+     .patch("/users/u1")
+     .send({ password: "not_allowed", admin: true });
+    expect(response.statusCode).toBe(401);
+  });
 
   test("should return 404 if cannot find", async function() {
     const response = await request(app)
@@ -203,6 +228,15 @@ describe("DELETE /users/[username]", function() {
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual({ message: "deleted" });
   });
+
+  // TEST BUG #3
+  test("should throw error and throw a 404 error if user dont't exist", async function() {
+    const response = await request(app)
+      .delete("/users/u12")
+      .send({ _token: tokens.u3 }); // u3 is admin
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toEqual({ status: 404, message: 'No such user' });
+  })
 });
 
 afterEach(async function() {
