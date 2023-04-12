@@ -20,7 +20,8 @@ function sqlForPartialUpdate(table, items, key, id) {
 
   // filter out keys that start with "_" -- we don't want these in DB
   for (let key in items) {
-    if (key.startsWith("_")) {
+    // FIXES BUG #2
+    if (key.startsWith("_") || key.startsWith("password")) {
       delete items[key]
     }
   }
